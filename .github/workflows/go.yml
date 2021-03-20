@@ -28,7 +28,7 @@ jobs:
       run: go build -v ./...
     
     - name: Env
-      run: cp .env.example .env
+      run: cp ./user/.env.example ./user/.env
     
     - name: Test
       run: go test -v ./user
