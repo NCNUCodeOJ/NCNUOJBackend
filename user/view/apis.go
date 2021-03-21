@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// StoreData default jwt data
 type StoreData struct {
 	ID       uint   `json:"id"`
 	UserName string `json:"username"`
@@ -26,6 +27,7 @@ func Hello(c *gin.Context) {
 	})
 }
 
+// Login login
 func Login(c *gin.Context) (interface{}, error) {
 	d := struct {
 		Name     string `json:"username"`

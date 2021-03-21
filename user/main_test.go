@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/joho/godotenv/autoload"
@@ -27,6 +28,12 @@ var data = []byte(`{
 
 var d struct {
 	Token string `json:"token"`
+}
+
+func TestMain(t *testing.T) {
+	start()
+	time.Sleep(10 * time.Second)
+	end()
 }
 
 func TestRegistry(t *testing.T) {
