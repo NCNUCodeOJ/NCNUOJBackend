@@ -10,8 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var IdentityKey = "id"
-
 type StoreData struct {
 	ID       uint   `json:"id"`
 	UserName string `json:"username"`
@@ -22,7 +20,7 @@ type StoreData struct {
 func Hello(c *gin.Context) {
 	claims := jwt.ExtractClaims(c)
 	c.JSON(200, gin.H{
-		"userID":   claims[IdentityKey],
+		"userID":   claims["id"],
 		"userName": claims["username"],
 		"admin":    claims["admin"],
 	})

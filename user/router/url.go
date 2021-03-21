@@ -20,13 +20,12 @@ func SetupRouter() *gin.Engine {
 		MaxRefresh:       time.Hour,
 		Authenticator:    view.Login,
 		TimeFunc:         time.Now,
-		IdentityKey:      view.IdentityKey,
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
 			if v, ok := data.(*models.User); ok {
 				return jwt.MapClaims{
-					view.IdentityKey: v.ID,
-					"username":       v.UserName,
-					"admin":          v.Admin,
+					"id":       v.ID,
+					"username": v.UserName,
+					"admin":    v.Admin,
 				}
 			}
 			return jwt.MapClaims{}
@@ -35,19 +34,19 @@ func SetupRouter() *gin.Engine {
 	if err != nil {
 		log.Fatal("JWT Error:" + err.Error())
 	}
-	baseUrl := "api/v1"
+	baseURL := "api/v1"
 	r := gin.Default()
-	nor := r.Group(baseUrl + "/auth")
+	nor := r.Group(baseURL + "/auth")
 	{
 		nor.POST("/register", view.Register)
 		nor.POST("/login", authMiddleware.LoginHandler)
 	}
-	nsr := r.Group(baseUrl + "/user")
+	nsr := r.Group(baseURL + "/user")
 	nsr.Use(authMiddleware.MiddlewareFunc())
 	{
 		nsr.GET("/info", view.Hello)
 	}
-	auth := r.Group(baseUrl + "/auth")
+	auth := r.Group(baseURL + "/auth")
 	auth.Use(authMiddleware.MiddlewareFunc())
 	{
 		auth.GET("/refresh_token", authMiddleware.RefreshHandler)
