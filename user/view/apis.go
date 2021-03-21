@@ -55,7 +55,7 @@ func Register(c *gin.Context) {
 	var user models.User
 	c.BindJSON(&data)
 	if u, err := models.UserDetailByUserName(data.Name); err == nil && u.ID != 0 {
-		c.JSON(http.StatusForbidden, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"message":  "此 username 已被使用",
 			"username": data.Name,
 		})
