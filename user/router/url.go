@@ -9,10 +9,15 @@ import (
 
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 // SetupRouter index
 func SetupRouter() *gin.Engine {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 	authMiddleware, err := jwt.New(&jwt.GinJWTMiddleware{
 		Realm:            "NCNUOJ",
 		SigningAlgorithm: "HS512",

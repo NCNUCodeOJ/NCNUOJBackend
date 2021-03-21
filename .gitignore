@@ -17,3 +17,4 @@
 test.db
 .env
 .DS_Store
+coverage.txt
