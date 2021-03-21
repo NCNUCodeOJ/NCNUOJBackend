@@ -1,6 +1,4 @@
 dist: bionic
-before_script:
-- cp .env.example .env
 language: go
 go:
 - "1.15"
