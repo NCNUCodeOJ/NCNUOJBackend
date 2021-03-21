@@ -16,7 +16,7 @@ import (
 func SetupRouter() *gin.Engine {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Println("Error loading .env file")
 	}
 	authMiddleware, err := jwt.New(&jwt.GinJWTMiddleware{
 		Realm:            "NCNUOJ",
