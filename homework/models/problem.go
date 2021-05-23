@@ -33,19 +33,16 @@ func DeleteProblem(id uint) (err error) {
 	return
 }
 
+//ListProblem 列出所有題目
+func ListProblem() (problems []Problem, err error) {
+	err = DB.Find(&problems).Error
+	return
+}
+
 //ProblemDetailByProblemId 查詢題目用problemid
 func ProblemDetailByProblemId(id uint) (Problem, error) {
 	var problem Problem
 	if err := DB.Where("id = ?", id).First(&problem).Error; err != nil {
-		return Problem{}, err
-	}
-	return problem, nil
-}
-
-//ProblemDetailByProblemId 查詢題目用problem name
-func ProblemDetailByProblemName(name string) (Problem, error) {
-	var problem Problem
-	if err := DB.Where("problem_name = ?", name).First(&problem).Error; err != nil {
 		return Problem{}, err
 	}
 	return problem, nil

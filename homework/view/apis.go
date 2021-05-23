@@ -3,6 +3,7 @@ package view
 import (
 	"NCNUOJBackend/homework/models"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/vincentinttsh/zero"
@@ -95,37 +96,32 @@ func CreateProblem(c *gin.Context) {
 
 //GetProblemByProblemId 用 problem id 找 problem
 func GetProblemByProblemId(c *gin.Context) {
-	data := struct {
-		ProblemId uint `json:"problem_id"`
-	}{}
-	if err := c.BindJSON(&data); err != nil {
+	Id, err := strconv.Atoi(c.Params.ByName("probid"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "系統錯誤",
+		})
+	}
+	var ProblemId uint = uint(Id)
+	if zero.IsZero(Id) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "未按照格式填寫",
 		})
 		return
 	}
-	if zero.IsZero(data) {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "未按照格式填寫",
-		})
-		return
-	}
-	if u, err := models.ProblemDetailByProblemId(data.ProblemId); err == nil && u.ID != 0 {
+	if u, err := models.ProblemDetailByProblemId(ProblemId); err == nil && u.ID != 0 {
 		var SampleIn []string
 		var SampleOut []string
 		var tags []string
-		c.JSON(http.StatusOK, gin.H{
-			"message": "找到題目了",
-		})
 
-		if s, err := models.SampleDetailByProblemId(data.ProblemId); err == nil && len(s) != 0 {
+		if s, err := models.SampleDetailByProblemId(ProblemId); err == nil && len(s) != 0 {
 			for pos := range s {
 				SampleIn = append(SampleIn, s[pos].Input)
 				SampleOut = append(SampleOut, s[pos].Output)
 			}
 		}
 
-		if t, err := models.TagDetailByProblemId(data.ProblemId); err == nil && len(t) != 0 {
+		if t, err := models.TagDetailByProblemId(ProblemId); err == nil && len(t) != 0 {
 			for pos := range t {
 				if t1, err := models.TagDetailByTagId(t[pos].TagId); err == nil && t1.ID != 0 {
 					tags = append(tags, t1.Name)
@@ -159,22 +155,20 @@ func GetProblemByProblemId(c *gin.Context) {
 func GetProblemByTagId(c *gin.Context) {
 	var problem_list []string
 	var problemid_list []uint
-	data := struct {
-		TagId uint `json:"tag_id"`
-	}{}
-	if err := c.BindJSON(&data); err != nil {
+	Id, err := strconv.Atoi(c.Params.ByName("tagid"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "系統錯誤",
+		})
+	}
+	var TagId uint = uint(Id)
+	if zero.IsZero(TagId) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "未按照格式填寫",
 		})
 		return
 	}
-	if zero.IsZero(data) {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "未按照格式填寫",
-		})
-		return
-	}
-	if t, err := models.ProblemDetailByTagId(data.TagId); err == nil && len(t) != 0 {
+	if t, err := models.ProblemDetailByTagId(TagId); err == nil && len(t) != 0 {
 
 		for pos := range t {
 
@@ -191,7 +185,7 @@ func GetProblemByTagId(c *gin.Context) {
 
 		return
 	} else {
-		c.JSON(http.StatusOK, gin.H{
+		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "還未有題目使用這個標籤",
 		})
 	}
@@ -200,9 +194,14 @@ func GetProblemByTagId(c *gin.Context) {
 
 //EditProblemByProblemId 編輯題目
 func EditProblemByProblemId(c *gin.Context) {
-
+	Id, err := strconv.Atoi(c.Params.ByName("probid"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "系統錯誤",
+		})
+	}
+	var Problem_id uint = uint(Id)
 	data := struct {
-		Problem_id         uint     `json:"problem_id"`
 		Problem_Name       string   `json:"problem_name"`
 		Description        string   `json:"description"`
 		Input_description  string   `json:"input_description"`
@@ -238,7 +237,7 @@ func EditProblemByProblemId(c *gin.Context) {
 	}
 	// 更新problem
 	var problem models.Problem
-	problem.ID = data.Problem_id
+	problem.ID = Problem_id
 	problem.ProblemName = data.Problem_Name
 	problem.Description = data.Description
 	problem.InputDescription = data.Input_description
@@ -254,7 +253,7 @@ func EditProblemByProblemId(c *gin.Context) {
 	var old_tags []models.Tag   //資料庫的舊資料
 	var old_tagid []uint        //要被刪掉的舊資料
 	var repeat_tagname []string // 重複的 tag name
-	if t, err := models.TagDetailByProblemId(data.Problem_id); err == nil && len(t) != 0 {
+	if t, err := models.TagDetailByProblemId(Problem_id); err == nil && len(t) != 0 {
 		//先找舊的tag資料
 		for pos := range t {
 			if tag_name, err := models.TagDetailByTagId(t[pos].TagId); err == nil && tag_name.ID != 0 {
@@ -277,7 +276,7 @@ func EditProblemByProblemId(c *gin.Context) {
 		}
 		//刪掉更新後沒有的資料
 		for pos := range old_tagid {
-			models.EditForDeleteTag2Table(old_tagid[pos], data.Problem_id)
+			models.EditForDeleteTag2Table(old_tagid[pos], Problem_id)
 		}
 	}
 
@@ -297,14 +296,14 @@ func EditProblemByProblemId(c *gin.Context) {
 		}
 		//確認有沒有這個tag 有的話直接用tag id 去串接 problem id ，沒有就創建一個tag ，再用這個tag id 去串
 		if t, err := models.CheckTag(data.Tags_list[pos]); err == nil && t.ID != 0 {
-			tag2table.ProblemId = data.Problem_id
+			tag2table.ProblemId = Problem_id
 			tag2table.TagId = t.ID
 			models.AddTag2Table(&tag2table)
 		} else {
 			tag.Name = data.Tags_list[pos]
 			models.AddTag(&tag)
 
-			tag2table.ProblemId = data.Problem_id
+			tag2table.ProblemId = Problem_id
 			tag2table.TagId = tag.ID
 			models.AddTag2Table(&tag2table)
 		}
@@ -313,7 +312,7 @@ func EditProblemByProblemId(c *gin.Context) {
 	var old_sample []models.Sample    //資料庫裡的舊 sample
 	var repeat_sample []models.Sample //重複的 sample
 	var old_sampleid []uint           //要被刪掉的舊 sample
-	if s, err := models.SampleDetailByProblemId(data.Problem_id); err == nil && len(s) != 0 {
+	if s, err := models.SampleDetailByProblemId(Problem_id); err == nil && len(s) != 0 {
 		for pos := range s {
 			old_sample = append(old_sample, s[pos])
 		}
@@ -335,7 +334,7 @@ func EditProblemByProblemId(c *gin.Context) {
 		}
 		//刪掉更新後已經沒有用的資料
 		for pos := range old_sampleid {
-			models.EditForDeleteSample(old_sampleid[pos], data.Problem_id)
+			models.EditForDeleteSample(old_sampleid[pos], Problem_id)
 		}
 	}
 
@@ -359,7 +358,7 @@ func EditProblemByProblemId(c *gin.Context) {
 
 		sample.Input = data.Sample_input[pos]
 		sample.Output = data.Sample_output[pos]
-		sample.ProblemId = data.Problem_id
+		sample.ProblemId = Problem_id
 		models.AddSample(&sample)
 
 	}
@@ -371,35 +370,32 @@ func EditProblemByProblemId(c *gin.Context) {
 
 //DeleteProblemById
 func DeleteProblemById(c *gin.Context) {
-	data := struct {
-		ProblemId uint `json:"problem_id"`
-	}{}
-
-	if err := c.BindJSON(&data); err != nil {
+	Id, err := strconv.Atoi(c.Params.ByName("probid"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "系統錯誤",
+		})
+	}
+	var ProblemId uint = uint(Id)
+	if zero.IsZero(ProblemId) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "未按照格式填寫",
 		})
 		return
 	}
-	if zero.IsZero(data) {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "未按照格式填寫",
-		})
-		return
-	}
-	if err := models.DeleteProblem(data.ProblemId); err != nil {
+	if err := models.DeleteProblem(ProblemId); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "題目刪除失敗",
 		})
 		return
 	}
-	if err := models.DeleteSample(data.ProblemId); err != nil {
+	if err := models.DeleteSample(ProblemId); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "題目刪除失敗",
 		})
 		return
 	}
-	if err := models.DeleteTag2TableByProb(data.ProblemId); err != nil {
+	if err := models.DeleteTag2TableByProb(ProblemId); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "題目刪除失敗",
 		})
@@ -411,64 +407,20 @@ func DeleteProblemById(c *gin.Context) {
 	})
 }
 
-//GetProblemByProblemName 用 problem id 找 problem
-func GetProblemByProblemName(c *gin.Context) {
-	data := struct {
-		ProblemName string `json:"problem_name"`
-	}{}
-	if err := c.BindJSON(&data); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "未按照格式填寫",
-		})
-		return
-	}
-	if zero.IsZero(data) {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "未按照格式填寫",
-		})
-		return
-	}
-	if u, err := models.ProblemDetailByProblemName(data.ProblemName); err == nil && u.ID != 0 {
-		var SampleIn []string
-		var SampleOut []string
-		var tags []string
-		c.JSON(http.StatusOK, gin.H{
-			"message": "找到題目了",
-		})
-
-		if s, err := models.SampleDetailByProblemId(u.ID); err == nil && len(s) != 0 {
-			for pos := range s {
-				SampleIn = append(SampleIn, s[pos].Input)
-				SampleOut = append(SampleOut, s[pos].Output)
-			}
-		}
-
-		if t, err := models.TagDetailByProblemId(u.ID); err == nil && len(t) != 0 {
-			for pos := range t {
-				if t1, err := models.TagDetailByTagId(t[pos].TagId); err == nil && t1.ID != 0 {
-					tags = append(tags, t1.Name)
-				}
-			}
-
+//GetProblemList 列出所有problem id
+func GetProblemList(c *gin.Context) {
+	var problemid_list []uint
+	if problems, err := models.ListProblem(); err == nil {
+		for pos := range problems {
+			problemid_list = append(problemid_list, problems[pos].ID)
 		}
 		c.JSON(http.StatusOK, gin.H{
-			"problem_id":         u.ID,
-			"problem_name":       u.ProblemName,
-			"description":        u.Description,
-			"input_description":  u.InputDescription,
-			"output_description": u.OutputDescripton,
-			"author":             u.Author,
-			"memory_limit":       u.MemoryLimit,
-			"cpu_time":           u.Cputime,
-			"layer":              u.Layer,
-			"sample_input":       SampleIn,
-			"sample_output":      SampleOut,
-			"tags_list":          tags,
+			"problemsid": problemid_list,
 		})
-		return
 	} else {
 		c.JSON(http.StatusOK, gin.H{
-			"message": "無此題目",
+			"message": "尚無題目",
 		})
 	}
+
 }
