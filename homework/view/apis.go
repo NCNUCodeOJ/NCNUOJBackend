@@ -48,7 +48,7 @@ func CreateProblem(c *gin.Context) {
 	problem.ProblemName = data.Problem_Name
 	problem.Description = data.Description
 	problem.InputDescription = data.Input_description
-	problem.OutputDescripton = data.Output_description
+	problem.OutputDescription = data.Output_description
 	problem.Author = data.Author
 	problem.MemoryLimit = data.Memory_limit
 	problem.Cputime = data.Cpu_time
@@ -134,7 +134,7 @@ func GetProblemByProblemId(c *gin.Context) {
 			"problem_name":       u.ProblemName,
 			"description":        u.Description,
 			"input_description":  u.InputDescription,
-			"output_description": u.OutputDescripton,
+			"output_description": u.OutputDescription,
 			"author":             u.Author,
 			"memory_limit":       u.MemoryLimit,
 			"cpu_time":           u.Cputime,
@@ -241,7 +241,7 @@ func EditProblemByProblemId(c *gin.Context) {
 	problem.ProblemName = data.Problem_Name
 	problem.Description = data.Description
 	problem.InputDescription = data.Input_description
-	problem.OutputDescripton = data.Output_description
+	problem.OutputDescription = data.Output_description
 	problem.Author = data.Author
 	problem.MemoryLimit = data.Memory_limit
 	problem.Cputime = data.Cpu_time
