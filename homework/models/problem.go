@@ -5,14 +5,14 @@ import "gorm.io/gorm"
 //Problem Database - database
 type Problem struct {
 	gorm.Model
-	ProblemName      string `gorm:"type:text;"`
-	Description      string `gorm:"type:text;"`
-	InputDescription string `gorm:"type:text;"`
-	OutputDescripton string `gorm:"type:text"`
-	Author           uint   `gorm:"NOT NULL;"`
-	MemoryLimit      uint   `gorm:"NOT NULL;"`
-	Cputime          uint   `gorm:"NOT NULL;"`
-	Layer            uint8  `gorm:"NOT NULL;"`
+	ProblemName       string `gorm:"type:text;"`
+	Description       string `gorm:"type:text;"`
+	InputDescription  string `gorm:"type:text;"`
+	OutputDescription string `gorm:"type:text"`
+	Author            uint   `gorm:"NOT NULL;"`
+	MemoryLimit       uint   `gorm:"NOT NULL;"`
+	Cputime           uint   `gorm:"NOT NULL;"`
+	Layer             uint8  `gorm:"NOT NULL;"`
 }
 
 //AddProblem 創建題目

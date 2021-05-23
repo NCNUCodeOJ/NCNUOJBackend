@@ -62,19 +62,19 @@ func CreateProblem(c *gin.Context) {
 
 	for pos := range data.Tags_list {
 		var tag models.Tag
-		var tag2table models.Tag2Table
+		var tag2table models.Tag2Problem
 
 		if t, err := models.CheckTag(data.Tags_list[pos]); err == nil && t.ID != 0 {
 			tag2table.ProblemId = problem.ID
 			tag2table.TagId = t.ID
-			models.AddTag2Table(&tag2table)
+			models.AddTag2Problem(&tag2table)
 		} else {
 			tag.Name = data.Tags_list[pos]
 			models.AddTag(&tag)
 
 			tag2table.ProblemId = problem.ID
 			tag2table.TagId = tag.ID
-			models.AddTag2Table(&tag2table)
+			models.AddTag2Problem(&tag2table)
 		}
 	}
 
@@ -282,7 +282,7 @@ func EditProblemByProblemId(c *gin.Context) {
 
 	for pos := range data.Tags_list {
 		var tag models.Tag
-		var tag2table models.Tag2Table
+		var tag2table models.Tag2Problem
 		var turn uint // 開關 做跳過的動作
 		turn = 1
 		//跳過已經有的資料
@@ -298,14 +298,14 @@ func EditProblemByProblemId(c *gin.Context) {
 		if t, err := models.CheckTag(data.Tags_list[pos]); err == nil && t.ID != 0 {
 			tag2table.ProblemId = Problem_id
 			tag2table.TagId = t.ID
-			models.AddTag2Table(&tag2table)
+			models.AddTag2Problem(&tag2table)
 		} else {
 			tag.Name = data.Tags_list[pos]
 			models.AddTag(&tag)
 
 			tag2table.ProblemId = Problem_id
 			tag2table.TagId = tag.ID
-			models.AddTag2Table(&tag2table)
+			models.AddTag2Problem(&tag2table)
 		}
 	}
 
@@ -395,7 +395,7 @@ func DeleteProblemById(c *gin.Context) {
 		})
 		return
 	}
-	if err := models.DeleteTag2TableByProb(ProblemId); err != nil {
+	if err := models.DeleteTag2ProblemByProb(ProblemId); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "題目刪除失敗",
 		})

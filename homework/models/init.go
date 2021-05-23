@@ -25,6 +25,6 @@ func AutoMigrateAll() {
 	DB.AutoMigrate(&Problem{})
 	DB.AutoMigrate(&Tag{})
 	DB.AutoMigrate(&Sample{})
-	DB.AutoMigrate(&Tag2Table{})
+	DB.AutoMigrate(&Tag2Problem{})
 
 }
