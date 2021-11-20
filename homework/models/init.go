@@ -33,7 +33,7 @@ func Setup() {
 		panic("failed to connect database")
 	}
 	AutoMigrateAll()
-	SetRc()
+
 }
 
 //AutoMigrateAll 自動產生 table
