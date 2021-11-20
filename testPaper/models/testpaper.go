@@ -1,14 +1,17 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
+// 把 TestPaper 裡面的 Name 改成 TestPaperName
 //User Database - database
 type TestPaper struct {
 	gorm.Model
-	Name     string `gorm:"NOT NULL;"`
-	AuthorID uint
-	ClassID  uint
-	Random   bool
+	TestPaperName string `gorm:"NOT NULL;"`
+	AuthorID      uint
+	ClassID       uint
+	Random        bool
 	// 測驗卷名稱
 	// 出卷者
 	// 對應的課堂
@@ -20,31 +23,29 @@ func AddTestPaper(testpaper *TestPaper) {
 	DB.Create(&testpaper)
 }
 
-// FindChoiceTP 透過 ID 取得 Choices
-func FindTestPaper(id uint) (TestPaper, error) {
-	var tp TestPaper
-	if err := DB.Where("id = ?", id).First(&tp).Error; err != nil {
+// GetAllTestPapers 取得所有 testpaper
+func GetAllTestPapers() (testpapers []TestPaper, err error) {
+	err = DB.Find(&testpapers).Error
+	return
+}
+
+// GetTestPaper 透過 ID 取得
+func GetTestPaper(testpaperID uint) (TestPaper, error) {
+	var testPaper TestPaper
+	if err := DB.Where("id = ?", testpaperID).First(&testPaper).Error; err != nil {
 		return TestPaper{}, err
 	}
-	return tp, nil
+	return testPaper, nil
 }
 
-// EditTP 修改
-func EditTP(tp TestPaper) {
-	DB.Where("id = ?", tp.ID).Save(&tp)
+// EditTestPaper 修改
+func EditTestPaper(testpaper *TestPaper) (err error) {
+	err = DB.Where("id = ?", testpaper.ID).Save(&testpaper).Error
+	return
 }
 
-// DeleteTP 刪除
-func DeleteTP(tp TestPaper) {
-	DB.Where("id = ?", tp.ID).Delete(&tp)
-}
-
-// DeleteChoiceTP 刪除
-func DeleteChoiceTP(choiceTP ChoiceTP) {
-	DB.Where("id = ?", choiceTP.ID).Delete(&choiceTP)
-}
-
-// DeleteClozeTP 刪除
-func DeleteClozeTP(clozeTP ClozeTP) {
-	DB.Where("id = ?", clozeTP.ID).Delete(&clozeTP)
+// DeleteTestPaper 刪除
+func DeleteTestPaper(testpaper TestPaper) (err error) {
+	err = DB.Where("id = ?", testpaper.ID).Delete(&testpaper).Error
+	return
 }

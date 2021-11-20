@@ -20,11 +20,26 @@ func Setup() {
 
 //AutoMigrateAll 自動產生 table
 func AutoMigrateAll() {
-	DB.AutoMigrate(&Choice{})
-	DB.AutoMigrate(&ChoiceOption{})
-	DB.AutoMigrate(&ChoiceTP{})
-	DB.AutoMigrate(&Cloze{})
-	DB.AutoMigrate(&ClozeAnswer{})
-	DB.AutoMigrate(&ClozeTP{})
 	DB.AutoMigrate(&TestPaper{})
+	DB.AutoMigrate(&QuestionTopic{})
+	DB.AutoMigrate(&Topic{})
+	DB.AutoMigrate(&Question{})
+	DB.AutoMigrate(&Answer{})
 }
+
+// var Ctx = context.Background()
+// var RC *redis.Client
+
+// func Client() {
+// 	rdb := redis.NewClient(&redis.Options{
+// 		Addr:     "localhost:6379",
+// 		Password: "", // no password set
+// 		DB:       0,  // use default DB
+// 	})
+// 	pong, err := rdb.Ping(Ctx).Result()
+// 	if err != nil {
+// 		fmt.Println("Redis connection fail：", pong, err)
+// 		return
+// 	}
+// 	fmt.Println("Redis connection successfully：", pong)
+// }
