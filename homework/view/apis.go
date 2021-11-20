@@ -2,6 +2,7 @@ package view
 
 import (
 	"NCNUOJBackend/homework/models"
+	"NCNUOJBackend/homework/view/submission"
 	"net/http"
 	"strconv"
 
@@ -53,6 +54,7 @@ func CreateProblem(c *gin.Context) {
 	problem.MemoryLimit = data.Memory_limit
 	problem.Cputime = data.Cpu_time
 	problem.Layer = data.Layer
+
 	// replace.Replace(&problem, &data)
 	if err := models.AddProblem(&problem); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -97,6 +99,7 @@ func CreateProblem(c *gin.Context) {
 //GetProblemByProblemId 用 problem id 找 problem
 func GetProblemByProblemId(c *gin.Context) {
 	Id, err := strconv.Atoi(c.Params.ByName("probid"))
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "系統錯誤",
@@ -109,6 +112,7 @@ func GetProblemByProblemId(c *gin.Context) {
 		})
 		return
 	}
+
 	if u, err := models.ProblemDetailByProblemId(ProblemId); err == nil && u.ID != 0 {
 		var SampleIn []string
 		var SampleOut []string
@@ -143,6 +147,7 @@ func GetProblemByProblemId(c *gin.Context) {
 			"sample_output":      SampleOut,
 			"tags_list":          tags,
 		})
+
 		return
 	} else {
 		c.JSON(http.StatusOK, gin.H{
@@ -423,4 +428,31 @@ func GetProblemList(c *gin.Context) {
 		})
 	}
 
+}
+
+// StartRabbit 啟動RabbitMq Receive
+func StartRabbitSend(c *gin.Context) {
+	data := submission.Answer{}
+	if err := c.BindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "未按照格式填寫",
+		})
+		return
+	}
+	var message []byte
+	message = submission.BodyFrom(data)
+	submission.Send_main(message)
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "啟動成功",
+	})
+}
+
+// StartRabbit 啟動RabbitMq Receive
+func StartRabbitReceive(c *gin.Context) {
+
+	submission.Rec_main()
+	c.JSON(http.StatusOK, gin.H{
+		"message": "啟動成功",
+	})
 }

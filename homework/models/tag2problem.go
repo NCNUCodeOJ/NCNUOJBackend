@@ -38,6 +38,7 @@ func TagDetailByProblemId(id uint) ([]Tag2Problem, error) {
 	if err := DB.Where("problem_id = ?", id).Find(&tag2problem).Error; err != nil {
 		return []Tag2Problem{}, err
 	}
+
 	return tag2problem, nil
 
 }

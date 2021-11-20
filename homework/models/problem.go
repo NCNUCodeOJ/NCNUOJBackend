@@ -1,6 +1,8 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 //Problem Database - database
 type Problem struct {
@@ -18,6 +20,7 @@ type Problem struct {
 //AddProblem 創建題目
 func AddProblem(problem *Problem) (err error) {
 	err = DB.Create(&problem).Error
+
 	return
 }
 
@@ -42,8 +45,11 @@ func ListProblem() (problems []Problem, err error) {
 //ProblemDetailByProblemId 查詢題目用problemid
 func ProblemDetailByProblemId(id uint) (Problem, error) {
 	var problem Problem
+
 	if err := DB.Where("id = ?", id).First(&problem).Error; err != nil {
+
 		return Problem{}, err
 	}
+
 	return problem, nil
 }

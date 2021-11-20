@@ -1,6 +1,8 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 //Sample Database - database
 type Sample struct {
@@ -32,5 +34,6 @@ func SampleDetailByProblemId(id uint) ([]Sample, error) {
 	if err := DB.Where("problem_id = ?", id).Find(&sample).Error; err != nil {
 		return []Sample{}, err
 	}
+
 	return sample, nil
 }
