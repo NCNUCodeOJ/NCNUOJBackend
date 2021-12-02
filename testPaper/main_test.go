@@ -20,13 +20,11 @@ import (
 	"gopkg.in/go-playground/assert.v1"
 )
 
+var token = "Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhZG1pbiI6ZmFsc2UsImV4cCI6NDc5MTA4MjEyMywiaWQiOiI3MTI0MTMxNTQxOTcxMTA3ODYiLCJvcmlnX2lhdCI6MTYzNzQ4MjEyMywidXNlcm5hbWUiOiJ0ZXN0X3VzZXIifQ.pznOSok8X7qv6FSIihJnma_zEy70TerzOs0QDZOq_4RPYOKSEOOYTZ9-VLm2P9XRldS17-7QrLFwjjfXyCodtA"
+
 func init() {
 	gin.SetMode(gin.TestMode)
 	models.Setup()
-}
-
-var d struct {
-	Token string `json:"token"`
 }
 
 var sigs = make(chan os.Signal, 1)
@@ -49,6 +47,7 @@ func TestAddTestpaper(t *testing.T) {
 	w := httptest.NewRecorder() // 取得 ResponseRecorder 物件
 	req, _ := http.NewRequest("POST", "/api/v1/testpaper", bytes.NewBuffer(testpaperData))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", token)
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 }
@@ -64,6 +63,7 @@ func TestAddTopic(t *testing.T) {
 	w := httptest.NewRecorder() // 取得 ResponseRecorder 物件
 	req, _ := http.NewRequest("POST", "/api/v1/testpaper/1/topic", bytes.NewBuffer(topicData))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", token)
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 }
@@ -82,6 +82,7 @@ func TestAddQuestion(t *testing.T) {
 	w := httptest.NewRecorder() // 取得 ResponseRecorder 物件
 	req, _ := http.NewRequest("POST", "/api/v1/question", bytes.NewBuffer(questionData))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", token)
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 }
@@ -98,6 +99,7 @@ func TestAddAnswer(t *testing.T) {
 	w := httptest.NewRecorder() // 取得 ResponseRecorder 物件
 	req, _ := http.NewRequest("POST", "/api/v1/question/1/answer", bytes.NewBuffer(answerData))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", token)
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 }
@@ -107,7 +109,7 @@ func TestGetAllTestpapers(t *testing.T) {
 	r := router.SetupRouter()
 	w := httptest.NewRecorder() // 取得 ResponseRecorder 物件
 	req, _ := http.NewRequest("GET", "/api/v1/testpaper", bytes.NewBuffer(make([]byte, 1000)))
-	req.Header.Set("Authorization", "Bearer "+d.Token)
+	req.Header.Set("Authorization", token)
 	r.ServeHTTP(w, req)
 	body, _ := ioutil.ReadAll(w.Body)
 	s := struct {
@@ -123,7 +125,7 @@ func TestGetTestpaper(t *testing.T) {
 	// 取得 ResponseRecorder 物件，用來記錄 response 狀態
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/api/v1/testpaper/1", bytes.NewBuffer(make([]byte, 1000)))
-	req.Header.Set("Authorization", "Bearer "+d.Token)
+	req.Header.Set("Authorization", token)
 	// gin.Engine.ServerHttp 實作 http.Handler 介面，用來處理 HTTP 請求及回應
 	r.ServeHTTP(w, req)
 	body, _ := ioutil.ReadAll(w.Body)
@@ -143,7 +145,7 @@ func TestGetAllTopics(t *testing.T) {
 	r := router.SetupRouter()
 	w := httptest.NewRecorder() // 取得 ResponseRecorder 物件
 	req, _ := http.NewRequest("GET", "/api/v1/testpaper/1/topic", bytes.NewBuffer(make([]byte, 1000)))
-	req.Header.Set("Authorization", "Bearer "+d.Token)
+	req.Header.Set("Authorization", token)
 	r.ServeHTTP(w, req)
 	body, _ := ioutil.ReadAll(w.Body)
 	s := struct {
@@ -159,10 +161,9 @@ func TestGetTopic(t *testing.T) {
 	w := httptest.NewRecorder() // 取得 ResponseRecorder 物件
 	req, _ := http.NewRequest("GET", "/api/v1/testpaper/1/topic/1", bytes.NewBuffer(make([]byte, 1000)))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", token)
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
-	body, _ := ioutil.ReadAll(w.Body)
-	json.Unmarshal(body, &d)
 }
 
 // Get 題目
@@ -171,10 +172,9 @@ func TestGetQuestion(t *testing.T) {
 	w := httptest.NewRecorder() // 取得 ResponseRecorder 物件
 	req, _ := http.NewRequest("GET", "/api/v1/question/1", bytes.NewBuffer(make([]byte, 1000)))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", token)
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
-	body, _ := ioutil.ReadAll(w.Body)
-	json.Unmarshal(body, &d)
 }
 
 // Get 選項/答案
@@ -183,10 +183,9 @@ func TestGetAnswer(t *testing.T) {
 	w := httptest.NewRecorder() // 取得 ResponseRecorder 物件
 	req, _ := http.NewRequest("GET", "/api/v1/question/1/answer/1", bytes.NewBuffer(make([]byte, 1000)))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", token)
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
-	body, _ := ioutil.ReadAll(w.Body)
-	json.Unmarshal(body, &d)
 }
 
 // PATCH 測驗卷
@@ -200,7 +199,7 @@ func TestEditTestpaper(t *testing.T) {
 	r := router.SetupRouter()
 	w := httptest.NewRecorder() // 取得 ResponseRecorder 物件
 	req, _ := http.NewRequest("PATCH", "/api/v1/testpaper/1", bytes.NewBuffer(testpaperPatchData))
-	req.Header.Set("Authorization", "Bearer "+d.Token)
+	req.Header.Set("Authorization", token)
 	r.ServeHTTP(w, req)
 	body, _ := ioutil.ReadAll(w.Body)
 	s := struct {
@@ -219,7 +218,7 @@ func TestEditTopic(t *testing.T) {
 	r := router.SetupRouter()
 	w := httptest.NewRecorder() // 取得 ResponseRecorder 物件
 	req, _ := http.NewRequest("PATCH", "/api/v1/testpaper/1/topic/1", bytes.NewBuffer(topicData))
-	req.Header.Set("Authorization", "Bearer "+d.Token)
+	req.Header.Set("Authorization", token)
 	r.ServeHTTP(w, req)
 	body, _ := ioutil.ReadAll(w.Body)
 	s := struct {
@@ -241,7 +240,7 @@ func TestEditQuestion(t *testing.T) {
 	r := router.SetupRouter()
 	w := httptest.NewRecorder() // 取得 ResponseRecorder 物件
 	req, _ := http.NewRequest("PATCH", "/api/v1/question/1", bytes.NewBuffer(questionData))
-	req.Header.Set("Authorization", "Bearer "+d.Token)
+	req.Header.Set("Authorization", token)
 	r.ServeHTTP(w, req)
 	body, _ := ioutil.ReadAll(w.Body)
 	s := struct {
@@ -261,7 +260,7 @@ func TestEditAnswer(t *testing.T) {
 	r := router.SetupRouter()
 	w := httptest.NewRecorder() // 取得 ResponseRecorder 物件
 	req, _ := http.NewRequest("PATCH", "/api/v1/question/1/answer/1", bytes.NewBuffer(answerData))
-	req.Header.Set("Authorization", "Bearer "+d.Token)
+	req.Header.Set("Authorization", token)
 	r.ServeHTTP(w, req)
 	body, _ := ioutil.ReadAll(w.Body)
 	s := struct {
@@ -275,7 +274,7 @@ func TestDeleteTestpaper(t *testing.T) {
 	r := router.SetupRouter()
 	w := httptest.NewRecorder() // 取得 ResponseRecorder 物件
 	req, _ := http.NewRequest("DELETE", "/api/v1/testpaper/1", bytes.NewBuffer(make([]byte, 1000)))
-	req.Header.Set("Authorization", "Bearer "+d.Token)
+	req.Header.Set("Authorization", token)
 	r.ServeHTTP(w, req)
 	body, _ := ioutil.ReadAll(w.Body)
 	s := struct {
@@ -290,7 +289,7 @@ func TestDeleteTopic(t *testing.T) {
 	r := router.SetupRouter()
 	w := httptest.NewRecorder() // 取得 ResponseRecorder 物件
 	req, _ := http.NewRequest("DELETE", "/api/v1/testpaper/1/topic/1", bytes.NewBuffer(make([]byte, 1000)))
-	req.Header.Set("Authorization", "Bearer "+d.Token)
+	req.Header.Set("Authorization", token)
 	r.ServeHTTP(w, req)
 	body, _ := ioutil.ReadAll(w.Body)
 	s := struct {
@@ -305,7 +304,7 @@ func TestDeleteQuestion(t *testing.T) {
 	r := router.SetupRouter()
 	w := httptest.NewRecorder() // 取得 ResponseRecorder 物件
 	req, _ := http.NewRequest("DELETE", "/api/v1/question/1", bytes.NewBuffer(make([]byte, 1000)))
-	req.Header.Set("Authorization", "Bearer "+d.Token)
+	req.Header.Set("Authorization", token)
 	r.ServeHTTP(w, req)
 	body, _ := ioutil.ReadAll(w.Body)
 	s := struct {
@@ -320,7 +319,7 @@ func TestDeleteAnswer(t *testing.T) {
 	r := router.SetupRouter()
 	w := httptest.NewRecorder() // 取得 ResponseRecorder 物件
 	req, _ := http.NewRequest("DELETE", "/api/v1/question/1/answer/1", bytes.NewBuffer(make([]byte, 1000)))
-	req.Header.Set("Authorization", "Bearer "+d.Token)
+	req.Header.Set("Authorization", token)
 	r.ServeHTTP(w, req)
 	body, _ := ioutil.ReadAll(w.Body)
 	s := struct {
