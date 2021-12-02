@@ -15,6 +15,8 @@ import (
 // AddQuestion 新增題目
 func AddQuestion(c *gin.Context) {
 	// 使用者傳過來的檔案格式(題目、出題者、範圍、出處)
+	var question models.Question
+	userID := c.MustGet("userID").(uint)
 	var questionData struct {
 		Question   *string `json:"question"`
 		AuthorID   *uint   `json:"authorID"`
@@ -23,7 +25,6 @@ func AddQuestion(c *gin.Context) {
 		Difficulty *uint   `json:"difficulty"`
 		Type       *uint   `json:"type"`
 	}
-	var question models.Question
 	if err := c.BindJSON(&questionData); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "未按照格式填寫",
@@ -38,7 +39,7 @@ func AddQuestion(c *gin.Context) {
 		return
 	}
 	question.Question = *questionData.Question
-	question.AuthorID = *questionData.AuthorID
+	question.AuthorID = userID
 	question.Layer = *questionData.Layer
 	question.Source = *questionData.Source
 	question.Difficulty = *questionData.Difficulty
