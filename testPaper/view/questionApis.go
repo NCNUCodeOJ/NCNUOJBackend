@@ -26,14 +26,14 @@ func AddQuestion(c *gin.Context) {
 	var question models.Question
 	if err := c.BindJSON(&questionData); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "選擇題未按照格式填寫",
+			"message": "未按照格式填寫",
 		})
 		return
 	}
 	// 如果有空值，則回傳 false
 	if zero.IsZero(questionData) {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "選擇題所有欄位不可為空值",
+			"message": "所有欄位不可為空值",
 		})
 		return
 	}
@@ -45,7 +45,7 @@ func AddQuestion(c *gin.Context) {
 	question.Type = *questionData.Type
 	models.AddQuestion(&question)
 	c.JSON(http.StatusOK, gin.H{
-		"message": "新增題目成功",
+		"message": "新增成功",
 	})
 }
 
@@ -61,14 +61,14 @@ func AddAnswer(c *gin.Context) {
 	var answer models.Answer
 	if err := c.BindJSON(&answerData); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "答案或選項未按照格式填寫",
+			"message": "未按照格式填寫",
 		})
 		return
 	}
 	// 如果有空值，則回傳 false
 	if zero.IsZero(answerData) {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "選項所有欄位不可為空值",
+			"message": "所有欄位不可為空值",
 		})
 		return
 	}
@@ -78,7 +78,7 @@ func AddAnswer(c *gin.Context) {
 	answer.Sort = *answerData.Sort
 	models.AddAnswer(&answer)
 	c.JSON(http.StatusOK, gin.H{
-		"message": "新增選項成功",
+		"message": "新增成功",
 	})
 }
 
@@ -87,14 +87,14 @@ func GetQuestion(c *gin.Context) {
 	id, err := strconv.Atoi(c.Params.ByName("questionID"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "路徑錯誤",
+			"message": "系統錯誤",
 		})
 		return
 	}
 	question, err := models.GetQuestion(uint(id))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
-			"message": "查無此資料",
+			"message": "查無資料",
 		})
 		return
 	}
@@ -120,8 +120,8 @@ func GetAllAnswers(c *gin.Context) {
 			"answersID": allAnswerID,
 		})
 	} else {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "尚無內容",
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "查無資料",
 		})
 	}
 }
@@ -131,14 +131,14 @@ func GetAnswer(c *gin.Context) {
 	id, err := strconv.Atoi(c.Params.ByName("answerID"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "路徑錯誤",
+			"message": "系統錯誤",
 		})
 		return
 	}
 	answer, err := models.GetAnswer(uint(id))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
-			"message": "查無此資料",
+			"message": "查無資料",
 		})
 		return
 	}
@@ -156,7 +156,7 @@ func EditQuestion(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Params.ByName("questionID"), 10, bits.UintSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "路徑錯誤",
+			"message": "系統錯誤",
 		})
 		return
 	}
@@ -172,21 +172,21 @@ func EditQuestion(c *gin.Context) {
 	c.BindJSON(&data)
 	question, err := models.GetQuestion(uint(id))
 	if err != nil {
-		c.JSON(http.StatusForbidden, gin.H{
-			"message": "查無此資料",
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "查無資料",
 		})
 		return
 	}
 	replace.Replace(&question, &data)
 	err = models.EditQuestion(&question)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"message": err,
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "修改失敗",
 		})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"message": "修改題目成功",
+		"message": "修改成功",
 	})
 }
 
@@ -195,7 +195,7 @@ func EditAnswer(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Params.ByName("answerID"), 10, bits.UintSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "路徑錯誤",
+			"message": "系統錯誤",
 		})
 		return
 	}
@@ -217,13 +217,13 @@ func EditAnswer(c *gin.Context) {
 	replace.Replace(&answer, &answerData)
 	err = models.EditAnswer(&answer)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"message": err,
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "修改失敗",
 		})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"message": "修改選項/答案成功",
+		"message": "修改成功",
 	})
 }
 
@@ -232,26 +232,26 @@ func DeleteQuestion(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Params.ByName("questionID"), 10, bits.UintSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "路徑錯誤",
+			"message": "系統錯誤",
 		})
 		return
 	}
 	question, err := models.GetQuestion(uint(id))
 	if err != nil {
-		c.JSON(http.StatusForbidden, gin.H{
-			"message": "查無此資料",
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "查無資料",
 		})
 		return
 	}
 	err = models.DeleteQuestion(question)
 	if err != nil {
-		c.JSON(http.StatusForbidden, gin.H{
-			"message": "失敗",
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "刪除失敗",
 		})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"message": "刪除問題成功",
+		"message": "刪除成功",
 	})
 }
 
@@ -260,25 +260,25 @@ func DeleteAnswer(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Params.ByName("answerID"), 10, bits.UintSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "路徑錯誤",
+			"message": "系統錯誤",
 		})
 		return
 	}
 	answer, err := models.GetAnswer(uint(id))
 	if err != nil {
-		c.JSON(http.StatusForbidden, gin.H{
-			"message": "查無此資料",
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "查無資料",
 		})
 		return
 	}
 	err = models.DeleteAnswer(answer)
 	if err != nil {
-		c.JSON(http.StatusForbidden, gin.H{
-			"message": "失敗",
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "刪除失敗",
 		})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"message": "刪除答案/選項成功",
+		"message": "刪除成功",
 	})
 }

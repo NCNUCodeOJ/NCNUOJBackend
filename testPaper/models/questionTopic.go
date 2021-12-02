@@ -5,12 +5,12 @@ import "gorm.io/gorm"
 // 選擇題在哪個 Topic
 type QuestionTopic struct {
 	gorm.Model
-	TopicID      uint
-	Distribution float64
-	QuestionID   uint
-	Sort         uint
-	Random       bool
-	Type         uint
+	TopicID      uint    `gorm:"NOT NULL;"`
+	Distribution float64 `gorm:"NOT NULL;"`
+	QuestionID   uint    `gorm:"NOT NULL;"`
+	Sort         uint    `gorm:"NOT NULL;"`
+	Random       bool    `gorm:"NOT NULL;"`
+	Type         uint    `gorm:"NOT NULL;"`
 	// 對應的第幾大題
 	// 配分
 	// 對應的題目 ID

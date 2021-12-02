@@ -7,9 +7,9 @@ import (
 // 第幾大題(要放在測驗卷的)
 type Topic struct {
 	gorm.Model
-	Description string `gorm:"NOT NULL;"`
-	TestPaperID uint
-	Sort        uint
+	Description string `gorm:"type:text;"`
+	TestPaperID uint   `gorm:"NOT NULL;"`
+	Sort        uint   `gorm:"NOT NULL;"`
 	// 大題敘述
 	// 對應的測驗卷
 	// 排序(這是第幾大題)

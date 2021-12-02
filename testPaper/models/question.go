@@ -2,15 +2,15 @@ package models
 
 import "gorm.io/gorm"
 
-// 選擇題
+// 選擇題type:text;
 type Question struct {
 	gorm.Model
-	Question   string `gorm:"NOT NULL;"`
-	AuthorID   uint
-	Layer      uint
-	Source     uint
-	Difficulty uint
-	Type       uint
+	Question   string `gorm:"type:text;"`
+	AuthorID   uint   `gorm:"NOT NULL;"`
+	Layer      uint   `gorm:"NOT NULL;"`
+	Source     uint   `gorm:"NOT NULL;"`
+	Difficulty uint   `gorm:"NOT NULL;"`
+	Type       uint   `gorm:"NOT NULL;"`
 	// 選擇題題目
 	// 出題者
 	// 層級(校內、區域、全國)
@@ -23,10 +23,10 @@ type Question struct {
 // Answer
 type Answer struct {
 	gorm.Model
-	Content    string
-	Correct    bool
-	QuestionID uint
-	Sort       uint
+	Content    string `gorm:"type:text;"`
+	Correct    bool   `gorm:"NOT NULL;"`
+	QuestionID uint   `gorm:"NOT NULL;"`
+	Sort       uint   `gorm:"NOT NULL;"`
 	// 內容
 	// 是否為正確答案
 	// 對應的題目

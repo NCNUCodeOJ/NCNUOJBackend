@@ -8,10 +8,10 @@ import (
 //User Database - database
 type TestPaper struct {
 	gorm.Model
-	TestPaperName string `gorm:"NOT NULL;"`
-	AuthorID      uint
-	ClassID       uint
-	Random        bool
+	TestPaperName string `gorm:"type:text;"`
+	AuthorID      uint   `gorm:"NOT NULL;"`
+	ClassID       uint   `gorm:"NOT NULL;"`
+	Random        bool   `gorm:"NOT NULL;"`
 	// 測驗卷名稱
 	// 出卷者
 	// 對應的課堂

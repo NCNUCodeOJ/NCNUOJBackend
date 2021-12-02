@@ -58,7 +58,7 @@ func GetAllTopics(c *gin.Context) {
 			"topicsID": allTopicID,
 		})
 	} else {
-		c.JSON(http.StatusOK, gin.H{
+		c.JSON(http.StatusNotFound, gin.H{
 			"message": "尚無內容",
 		})
 	}
@@ -70,14 +70,14 @@ func GetTopic(c *gin.Context) {
 	id, err := strconv.Atoi(c.Params.ByName("topicID"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "路徑錯誤",
+			"message": "系統錯誤",
 		})
 		return
 	}
 	topic, err := models.GetTopic(uint(id)) //這邊
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
-			"message": "查無此資料",
+			"message": "查無資料",
 		})
 		return
 	}
@@ -94,7 +94,7 @@ func EditTopic(c *gin.Context) {
 	id, err := strconv.Atoi(c.Params.ByName("topicID"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "路徑錯誤",
+			"message": "系統錯誤",
 		})
 		return
 	}
@@ -106,21 +106,21 @@ func EditTopic(c *gin.Context) {
 	c.BindJSON(&data)
 	topic, err := models.GetTopic(uint(id))
 	if err != nil {
-		c.JSON(http.StatusForbidden, gin.H{
-			"message": "查無此資料",
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "查無資料",
 		})
 		return
 	}
 	replace.Replace(&topic, &data)
 	err = models.EditTopic(&topic)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"message": err,
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "修改失敗",
 		})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"message": "修改大題成功",
+		"message": "修改成功",
 	})
 }
 
@@ -129,25 +129,25 @@ func DeleteTopic(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Params.ByName("topicID"), 10, bits.UintSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "路徑錯誤",
+			"message": "系統錯誤",
 		})
 		return
 	}
 	topic, err := models.GetTopic(uint(id))
 	if err != nil {
-		c.JSON(http.StatusForbidden, gin.H{
-			"message": "查無此資料",
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "查無資料",
 		})
 		return
 	}
 	err = models.DeleteTopic(topic)
 	if err != nil {
-		c.JSON(http.StatusForbidden, gin.H{
-			"message": "失敗",
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "刪除失敗",
 		})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"message": "刪除測驗卷成功",
+		"message": "刪除成功",
 	})
 }
