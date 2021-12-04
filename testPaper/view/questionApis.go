@@ -2,6 +2,8 @@ package view
 
 import (
 	"NCNUOJBackend/testPaper/models"
+	"fmt"
+	"log"
 	"math/bits"
 	"strconv"
 
@@ -12,19 +14,21 @@ import (
 	"github.com/vincentinttsh/zero"
 )
 
-// AddQuestion 新增題目
-func AddQuestion(c *gin.Context) {
-	// 使用者傳過來的檔案格式(題目、出題者、範圍、出處)
+// CreateQuestion 新增題目
+func CreateQuestion(c *gin.Context) {
+	// 使用者傳過來的檔案格式 (題目、出題者、範圍、出處)
 	var question models.Question
 	userID := c.MustGet("userID").(uint)
 	var questionData struct {
-		Question   *string `json:"question"`
-		AuthorID   *uint   `json:"authorID"`
-		Layer      *uint   `json:"layer"`
-		Source     *uint   `json:"source"`
-		Difficulty *uint   `json:"difficulty"`
-		Type       *uint   `json:"type"`
+		Question   *string          `json:"question"`
+		Author     *uint            `json:"author"`
+		Layer      *uint            `json:"layer"`
+		Source     *string          `json:"source"`
+		Difficulty *uint            `json:"difficulty"`
+		Type       *uint            `json:"type"`
+		OptionList []*models.Option `json:"options"`
 	}
+	log.Println(questionData.Question == nil)
 	if err := c.BindJSON(&questionData); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "未按照格式填寫",
@@ -32,93 +36,50 @@ func AddQuestion(c *gin.Context) {
 		return
 	}
 	// 如果有空值，則回傳 false
-	if zero.IsZero(questionData) {
+	if zero.IsZero(&questionData) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "所有欄位不可為空值",
 		})
 		return
 	}
 	question.Question = *questionData.Question
-	question.AuthorID = userID
+	question.Author = userID
 	question.Layer = *questionData.Layer
 	question.Source = *questionData.Source
 	question.Difficulty = *questionData.Difficulty
 	question.Type = *questionData.Type
-	models.AddQuestion(&question)
+	log.Println(question)
+	models.CreateQuestion(&question)
+
+	for i, optionData := range questionData.OptionList {
+		var option models.Option
+		option.Content = optionData.Content
+		option.Answer = optionData.Answer
+		option.QuestionID = question.ID
+		option.Sort = uint(i + 1)
+		if err := models.CreateOption(&option); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "題目新增失敗",
+			})
+			fmt.Println(option)
+			return
+		}
+		fmt.Println(option)
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "新增成功",
 	})
 }
 
-// AddAnswer 新增選項(答案)
-func AddAnswer(c *gin.Context) {
-	// 使用者傳過來的檔案格式(選項內容、是否為正確答案、對應的題目)
-	var answerData struct {
-		Content    *string `json:"content"`
-		Correct    *bool   `json:"correct"`
-		QuestionID *uint   `json:"questionID"`
-		Sort       *uint   `json:"sort"`
-	}
-	var answer models.Answer
-	if err := c.BindJSON(&answerData); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "未按照格式填寫",
-		})
-		return
-	}
-	// 如果有空值，則回傳 false
-	if zero.IsZero(answerData) {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "所有欄位不可為空值",
-		})
-		return
-	}
-	answer.Content = *answerData.Content
-	answer.Correct = *answerData.Correct
-	answer.QuestionID = *answerData.QuestionID
-	answer.Sort = *answerData.Sort
-	models.AddAnswer(&answer)
-	c.JSON(http.StatusOK, gin.H{
-		"message": "新增成功",
-	})
-}
-
-// GetQuestion 查詢選擇題
-func GetQuestion(c *gin.Context) {
-	id, err := strconv.Atoi(c.Params.ByName("questionID"))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "系統錯誤",
-		})
-		return
-	}
-	question, err := models.GetQuestion(uint(id))
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"message": "查無資料",
-		})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{
-		"id":         question.ID,
-		"question":   question.Question,
-		"authorID":   question.AuthorID,
-		"layer":      question.Layer,
-		"source":     question.Source,
-		"difficulty": question.Difficulty,
-		"type":       question.Type,
-	})
-}
-
-// GetAllAnswers 透過 ID 取得測驗卷
-func GetAllAnswers(c *gin.Context) {
-	var allAnswerID []uint
-	if answers, err := models.GetAllAnswers(); err == nil {
-		for pos := range answers {
-			allAnswerID = append(allAnswerID, answers[pos].ID)
+// ListQuestions 取得全部題目的 id
+func ListQuestions(c *gin.Context) {
+	var questionsID []uint
+	if questions, err := models.ListQuestions(); err == nil {
+		for pos := range questions {
+			questionsID = append(questionsID, questions[pos].ID)
 		}
 		c.JSON(http.StatusOK, gin.H{
-			"answersID": allAnswerID,
+			"questions_id": questionsID,
 		})
 	} else {
 		c.JSON(http.StatusNotFound, gin.H{
@@ -127,50 +88,17 @@ func GetAllAnswers(c *gin.Context) {
 	}
 }
 
-// GetAnswer 查詢選項
-func GetAnswer(c *gin.Context) {
-	id, err := strconv.Atoi(c.Params.ByName("answerID"))
+// GetQuestion 查詢題目 (也會列出該題目所有選項/答案)
+func GetQuestion(c *gin.Context) {
+	id, err := strconv.Atoi(c.Params.ByName("questionID"))
+	var optionList []models.Option
+	var option = make([]gin.H, 0)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "系統錯誤",
 		})
 		return
 	}
-	answer, err := models.GetAnswer(uint(id))
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"message": "查無資料",
-		})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{
-		"id":         answer.ID,
-		"content":    answer.Content,
-		"correct":    answer.Correct,
-		"questionID": answer.QuestionID,
-		"sort":       answer.Sort,
-	})
-}
-
-// EditQuestion 修改選擇題
-func EditQuestion(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Params.ByName("questionID"), 10, bits.UintSize)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "系統錯誤",
-		})
-		return
-	}
-	var data struct {
-		ID         *uint   `json:"ID"`
-		Question   *string `json:"question"`
-		AuthorID   *uint   `json:"authorID"`
-		Layer      *uint   `json:"layer"`
-		Source     *uint   `json:"source"`
-		Difficulty *uint   `json:"difficulty"`
-		Type       *uint   `json:"type"`
-	}
-	c.BindJSON(&data)
 	question, err := models.GetQuestion(uint(id))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
@@ -178,57 +106,81 @@ func EditQuestion(c *gin.Context) {
 		})
 		return
 	}
-	replace.Replace(&question, &data)
-	err = models.EditQuestion(&question)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "修改失敗",
+	for _, opt := range optionList {
+		option = append(option, gin.H{
+			"option_content":     opt.Content,
+			"option_answer":      opt.Answer,
+			"option_question_id": opt.QuestionID,
+			"option_sort":        opt.Sort,
 		})
-		return
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"message": "修改成功",
+		"id":         question.ID,
+		"question":   question.Question,
+		"author":     question.Author,
+		"layer":      question.Layer,
+		"source":     question.Source,
+		"difficulty": question.Difficulty,
+		"type":       question.Type,
+		"option":     optionList,
 	})
 }
 
-// EditAnswer 修改答案/選項
-func EditAnswer(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Params.ByName("answerID"), 10, bits.UintSize)
+// UpdateQuestion 更新題目 (包含選項/答案)
+func UpdateQuestion(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Params.ByName("questionID"), 10, bits.UintSize)
+	var optionData []models.Option
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "系統錯誤",
 		})
 		return
 	}
-	answerData := struct {
-		ID         *uint   `json:"ID"`
-		Content    *string `json:"content"`
-		Correct    *bool   `json:"correct"`
-		QuestionID *uint   `json:"questionID"`
-		Sort       *uint   `json:"sort"`
-	}{}
-	c.BindJSON(&answerData)
-	answer, err := models.GetAnswer(uint(id))
+	var questionData struct {
+		ID         *uint   `json:"id"`
+		Question   *string `json:"question"`
+		Author     *uint   `json:"author"`
+		Layer      *uint   `json:"layer"`
+		Source     *string `json:"source"`
+		Difficulty *uint   `json:"difficulty"`
+		Type       *uint   `json:"type"`
+	}
+	c.BindJSON(&questionData)
+	question, err := models.GetQuestion(uint(id))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
-			"message": "查無此資料",
+			"message": "查無資料",
 		})
 		return
 	}
-	replace.Replace(&answer, &answerData)
-	err = models.EditAnswer(&answer)
+	if err := c.BindJSON(&optionData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "json error",
+			"error":   err.Error(),
+		})
+		return
+	}
+	if err := models.UpdateOption(uint(id)); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "system error",
+			"error":   err.Error(),
+		})
+		return
+	}
+	replace.Replace(&question, &questionData)
+	err = models.UpdateQuestion(&question)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "修改失敗",
+			"message": "更新失敗",
 		})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"message": "修改成功",
+		"message": "更新成功",
 	})
 }
 
-// DeleteQuestion 刪除選擇題
+// DeleteQuestion 刪除題目 (包含選項/答案)
 func DeleteQuestion(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Params.ByName("questionID"), 10, bits.UintSize)
 	if err != nil {
@@ -245,34 +197,6 @@ func DeleteQuestion(c *gin.Context) {
 		return
 	}
 	err = models.DeleteQuestion(question)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "刪除失敗",
-		})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{
-		"message": "刪除成功",
-	})
-}
-
-// DeleteAnswer 刪除答案
-func DeleteAnswer(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Params.ByName("answerID"), 10, bits.UintSize)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "系統錯誤",
-		})
-		return
-	}
-	answer, err := models.GetAnswer(uint(id))
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"message": "查無資料",
-		})
-		return
-	}
-	err = models.DeleteAnswer(answer)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "刪除失敗",

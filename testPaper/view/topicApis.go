@@ -13,12 +13,12 @@ import (
 	"github.com/vincentinttsh/zero"
 )
 
-// AddTopic 新增
-func AddTopic(c *gin.Context) {
+// CreateTopic 新增
+func CreateTopic(c *gin.Context) {
 	// 使用者傳過來的檔案格式(名稱、出卷者、對應的課堂、是否亂數出題)
 	var data struct {
 		Description *string `json:"description"`
-		TestPaperID *uint   `json:"testPaperID"`
+		TestPaperID *uint   `json:"testPaper_id"`
 		Sort        *uint   `json:"sort"`
 	}
 	var topic models.Topic
@@ -41,16 +41,16 @@ func AddTopic(c *gin.Context) {
 	topic.Description = *data.Description
 	topic.TestPaperID = *data.TestPaperID
 	topic.Sort = *data.Sort
-	models.AddTopic(&topic)
+	models.CreateTopic(&topic)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "新增成功",
 	})
 }
 
-// GetAllTopics 透過 ID 取得測驗卷
-func GetAllTopics(c *gin.Context) {
+// ListTopics 透過 testpaper_id 取得測驗卷
+func ListTopics(c *gin.Context) {
 	var allTopicID []uint
-	if topics, err := models.GetAllTopics(); err == nil {
+	if topics, err := models.ListTopics(); err == nil {
 		for pos := range topics {
 			allTopicID = append(allTopicID, topics[pos].ID)
 		}
@@ -64,17 +64,23 @@ func GetAllTopics(c *gin.Context) {
 	}
 }
 
-// GetTopic 透過 ID 取得
-func GetTopic(c *gin.Context) {
-	// check redis
-	id, err := strconv.Atoi(c.Params.ByName("topicID"))
+// GetTopicBySort 透過 sort 取得 topic
+func GetTopicBySort(c *gin.Context) {
+	id, err := strconv.Atoi(c.Params.ByName("testpaperID"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "系統錯誤",
 		})
 		return
 	}
-	topic, err := models.GetTopic(uint(id)) //這邊
+	sort, err := strconv.Atoi(c.Params.ByName("sort"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "系統錯誤",
+		})
+		return
+	}
+	topic, err := models.GetTopicBySort(uint(id), uint(sort))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"message": "查無資料",
@@ -82,16 +88,23 @@ func GetTopic(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"id":          topic.ID,
-		"description": topic.Description,
-		"testpaperID": topic.TestPaperID,
-		"sort":        topic.Sort,
+		"id":           topic.ID,
+		"description":  topic.Description,
+		"testpaper_id": topic.TestPaperID,
+		"sort":         topic.Sort,
 	})
 }
 
-// EditTopic 修改大題
-func EditTopic(c *gin.Context) {
-	id, err := strconv.Atoi(c.Params.ByName("topicID"))
+// UpdateTopic 更新大題
+func UpdateTopic(c *gin.Context) {
+	id, err := strconv.Atoi(c.Params.ByName("testpaperID"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "系統錯誤",
+		})
+		return
+	}
+	sort, err := strconv.Atoi(c.Params.ByName("sort"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "系統錯誤",
@@ -100,11 +113,11 @@ func EditTopic(c *gin.Context) {
 	}
 	data := struct {
 		Description *string `json:"description"`
-		TestPaperID *uint   `json:"testPaperID"`
+		TestPaperID *uint   `json:"testPaper_id"`
 		Sort        *uint   `json:"sort"`
 	}{}
 	c.BindJSON(&data)
-	topic, err := models.GetTopic(uint(id))
+	topic, err := models.GetTopicBySort(uint(id), uint(sort))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"message": "查無資料",
@@ -112,28 +125,35 @@ func EditTopic(c *gin.Context) {
 		return
 	}
 	replace.Replace(&topic, &data)
-	err = models.EditTopic(&topic)
+	err = models.UpdateTopic(&topic)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "修改失敗",
+			"message": "更新失敗",
 		})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"message": "修改成功",
+		"message": "更新成功",
 	})
 }
 
 // DeleteTopic 刪除
 func DeleteTopic(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Params.ByName("topicID"), 10, bits.UintSize)
+	id, err := strconv.ParseUint(c.Params.ByName("testpaperID"), 10, bits.UintSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "系統錯誤",
 		})
 		return
 	}
-	topic, err := models.GetTopic(uint(id))
+	sort, err := strconv.ParseUint(c.Params.ByName("sort"), 10, bits.UintSize)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "系統錯誤",
+		})
+		return
+	}
+	topic, err := models.GetTopicBySort(uint(id), uint(sort))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"message": "查無資料",

@@ -1,30 +1,32 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
-// 選擇題type:text;
+// 題目 type:text;
 type Question struct {
 	gorm.Model
 	Question   string `gorm:"type:text;"`
-	AuthorID   uint   `gorm:"NOT NULL;"`
+	Author     uint   `gorm:"NOT NULL;"`
 	Layer      uint   `gorm:"NOT NULL;"`
-	Source     uint   `gorm:"NOT NULL;"`
+	Source     string `gorm:"NOT NULL;"`
 	Difficulty uint   `gorm:"NOT NULL;"`
 	Type       uint   `gorm:"NOT NULL;"`
-	// 選擇題題目
+	// 題目
 	// 出題者
 	// 層級(校內、區域、全國)
-	// 題目出處(學校 ID、單位 ID)
+	// 題目出處(學校 id、單位 id)
 	// 難易度
 	// 類型(多選、單選、填充)
-	// 答案/選項
+	// 選項/答案
 }
 
-// Answer
-type Answer struct {
+// Option
+type Option struct {
 	gorm.Model
 	Content    string `gorm:"type:text;"`
-	Correct    bool   `gorm:"NOT NULL;"`
+	Answer     bool   `gorm:"NOT NULL;"`
 	QuestionID uint   `gorm:"NOT NULL;"`
 	Sort       uint   `gorm:"NOT NULL;"`
 	// 內容
@@ -33,17 +35,25 @@ type Answer struct {
 	// 這是第幾個選項(若為填充題則填 -1)
 }
 
-// AddQuestion 新增選擇題題目
-func AddQuestion(question *Question) {
-	DB.Create(&question)
+// CreateQuestion 新增題目
+func CreateQuestion(question *Question) (err error) {
+	err = DB.Create(&question).Error
+	return
 }
 
-// AddAnswer 新增選項
-func AddAnswer(answer *Answer) {
-	DB.Create(&answer)
+// CreateOption 新增選項/答案
+func CreateOption(option *Option) (err error) {
+	err = DB.Create(&option).Error
+	return
 }
 
-// GetQuestionByID 透過 ID 取得 Question
+// ListQuestions 取得所有 Question
+func ListQuestions() (questions []Question, err error) {
+	err = DB.Find(&questions).Error
+	return
+}
+
+// GetQuestionByID 透過 id 取得 question
 func GetQuestion(id uint) (Question, error) {
 	var question Question
 	if err := DB.Where("id = ?", id).First(&question).Error; err != nil {
@@ -52,30 +62,22 @@ func GetQuestion(id uint) (Question, error) {
 	return question, nil
 }
 
-// GetAnswer 透過 questionID 取得 Answer
-func GetAnswer(questionID uint) (Answer, error) {
-	var answer Answer
-	if err := DB.Where("id = ?", questionID).First(&answer).Error; err != nil {
-		return Answer{}, err
-	}
-	return answer, nil
-}
-
-// GetAllAnswers 取得所有 answer
-func GetAllAnswers() (answers []Answer, err error) {
-	err = DB.Find(&answers).Error
+// ListOptionsByQuestionID 透過 questionID 取得該題目下的所有 option
+func ListOptionsByQuestionID(questionID uint) (option Option, err error) {
+	err = DB.First(&option, questionID).Error
 	return
 }
 
-// EditQuestion 修改題目
-func EditQuestion(question *Question) (err error) {
-	err = DB.Where("id = ?", question.ID).Save(&question).Error
+// UpdateQuestion 更新題目
+func UpdateQuestion(question *Question) (err error) {
+	err = DB.Save(&question).Error
 	return
 }
 
-// EditAnswer 修改選項
-func EditAnswer(answer *Answer) (err error) {
-	DB.Where("id = ?", answer.QuestionID).Save(&answer)
+// UpdateOption 更新選項/答案 (更新題目時)
+func UpdateOption(questionID uint) (err error) {
+	var option Option
+	err = DB.Model(&Option{}).Where("question_id = ?", questionID).First(&option).Save(&option).Error
 	return
 }
 
@@ -85,9 +87,8 @@ func DeleteQuestion(question Question) (err error) {
 	return
 }
 
-// DeleteAnswer 刪除選項
-func DeleteAnswer(answer Answer) (err error) {
-	// err = DB.Where("questionID = ?", answer.QuestionID).Where("sort = ?", answer.Sort).Delete(&answer).Error
-	err = DB.Where("id = ?", answer.QuestionID).Delete(&answer).Error
+// DeleteOptions 刪除題目內的所有選項(刪除題目時)
+func DeleteOptions(questionID uint) (err error) {
+	err = DB.Where(&Option{QuestionID: questionID}).Delete(&Option{}).Error
 	return
 }

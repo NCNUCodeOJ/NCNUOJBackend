@@ -15,29 +15,29 @@ type Topic struct {
 	// 排序(這是第幾大題)
 }
 
-// AddTopic 新增大題
-func AddTopic(topic *Topic) {
+// CreateTopic 新增大題
+func CreateTopic(topic *Topic) {
 	DB.Create(&topic)
 }
 
-// GetAllTopics 取得所有 topic
-func GetAllTopics() (topics []Topic, err error) {
+// ListTopics 取得所有 topic
+func ListTopics() (topics []Topic, err error) {
 	err = DB.Find(&topics).Error
 	return
 }
 
-// GetTopic 透過 testPaperID 取得 Topic
-func GetTopic(testpaperID uint) (Topic, error) {
+// GetTopicBySort 透過 sort 取得 topic
+func GetTopicBySort(testpaperID uint, sort uint) (Topic, error) {
 	var topic Topic
-	if err := DB.Where("id = ?", testpaperID).First(&topic).Error; err != nil {
+	if err := DB.Where("id = ?", testpaperID).Where("sort = ?", sort).First(&topic).Error; err != nil {
 		return Topic{}, err
 	}
 	return topic, nil
 }
 
-// EditTopic 修改
-func EditTopic(topic *Topic) (err error) {
-	DB.Where("id = ?", topic.TestPaperID).Save(&topic)
+// UpdateTopic 更新
+func UpdateTopic(topic *Topic) (err error) {
+	err = DB.Where("sort = ?", topic.Sort).Save(&topic).Error
 	return
 }
 

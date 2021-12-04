@@ -13,15 +13,15 @@ import (
 	"github.com/vincentinttsh/zero"
 )
 
-// AddTestPaper 新增測驗卷
-func AddTestPaper(c *gin.Context) {
+// CreateTestPaper 新增測驗卷
+func CreateTestPaper(c *gin.Context) {
 	var testpaper models.TestPaper
 	userID := c.MustGet("userID").(uint)
 	// 使用者傳過來的檔案格式(測驗卷名稱、出卷者、對應的課堂、是否亂數出題)
 	var data struct {
-		TestPaperName *string `json:"testpaperName"`
-		AuthorID      *uint   `json:"authorID"`
-		ClassID       *uint   `json:"classID"`
+		TestPaperName *string `json:"testpaper_name"`
+		Author        *uint   `json:"author"`
+		ClassID       *uint   `json:"class_id"`
 		Random        *bool   `json:"random"`
 	}
 	log.Println(data.TestPaperName == nil)
@@ -40,24 +40,24 @@ func AddTestPaper(c *gin.Context) {
 		return
 	}
 	testpaper.TestPaperName = *data.TestPaperName
-	testpaper.AuthorID = userID
+	testpaper.Author = userID
 	testpaper.ClassID = *data.ClassID
 	testpaper.Random = *data.Random
-	models.AddTestPaper(&testpaper)
+	models.CreateTestPaper(&testpaper)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "新增成功",
 	})
 }
 
-// GetAllTestPapers 取得全部測驗卷的 ID
-func GetAllTestPapers(c *gin.Context) {
-	var allTestpaperID []uint
-	if testpapers, err := models.GetAllTestPapers(); err == nil {
+// ListTestPapers 取得全部測驗卷的 id
+func ListTestPapers(c *gin.Context) {
+	var testpapersID []uint
+	if testpapers, err := models.ListTestPapers(); err == nil {
 		for pos := range testpapers {
-			allTestpaperID = append(allTestpaperID, testpapers[pos].ID)
+			testpapersID = append(testpapersID, testpapers[pos].ID)
 		}
 		c.JSON(http.StatusOK, gin.H{
-			"testpapersID": allTestpaperID,
+			"testpapersID": testpapersID,
 		})
 	} else {
 		c.JSON(http.StatusNotFound, gin.H{
@@ -66,8 +66,8 @@ func GetAllTestPapers(c *gin.Context) {
 	}
 }
 
-// GetTestPaper 透過 ID 取得測驗卷
-func GetTestPaper(c *gin.Context) {
+// GetTestPaperByID 透過 id 取得測驗卷
+func GetTestPaperByID(c *gin.Context) {
 	// check redis
 	// ParseUint convert strings to values
 	id, err := strconv.Atoi(c.Params.ByName("testpaperID"))
@@ -77,7 +77,7 @@ func GetTestPaper(c *gin.Context) {
 		})
 		return
 	}
-	testpaper, err := models.GetTestPaper(uint(id))
+	testpaper, err := models.GetTestPaperByID(uint(id))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"message": "查無資料",
@@ -85,16 +85,16 @@ func GetTestPaper(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"id":            testpaper.ID,
-		"testpaperName": testpaper.TestPaperName,
-		"authorID":      testpaper.AuthorID,
-		"classID":       testpaper.ClassID,
-		"random":        testpaper.Random,
+		"id":             testpaper.ID,
+		"testpaper_name": testpaper.TestPaperName,
+		"author":         testpaper.Author,
+		"class_id":       testpaper.ClassID,
+		"random":         testpaper.Random,
 	})
 }
 
-// EditTestPaper 修改測驗卷
-func EditTestPaper(c *gin.Context) {
+// UpdateTestPaper 更新測驗卷
+func UpdateTestPaper(c *gin.Context) {
 	id, err := strconv.Atoi(c.Params.ByName("testpaperID"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -103,13 +103,13 @@ func EditTestPaper(c *gin.Context) {
 		return
 	}
 	var data struct {
-		TestPaperName *string `json:"testpaperName"`
-		AuthorID      *uint   `json:"authorID"`
-		ClassID       *uint   `json:"classID"`
+		TestPaperName *string `json:"testpaper_name"`
+		Author        *uint   `json:"author"`
+		ClassID       *uint   `json:"class_id"`
 		Random        *bool   `json:"random"`
 	}
 	c.BindJSON(&data)
-	testpaper, err := models.GetTestPaper(uint(id))
+	testpaper, err := models.GetTestPaperByID(uint(id))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"message": "查無資料",
@@ -117,7 +117,7 @@ func EditTestPaper(c *gin.Context) {
 		return
 	}
 	replace.Replace(&testpaper, &data)
-	err = models.EditTestPaper(&testpaper)
+	err = models.UpdateTestPaper(&testpaper)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "未填寫完成",
@@ -125,7 +125,7 @@ func EditTestPaper(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"message": "修改成功",
+		"message": "更新成功",
 	})
 }
 
@@ -138,7 +138,7 @@ func DeleteTestPaper(c *gin.Context) {
 		})
 		return
 	}
-	testpaper, err := models.GetTestPaper(uint(id))
+	testpaper, err := models.GetTestPaperByID(uint(id))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"message": "查無資料",

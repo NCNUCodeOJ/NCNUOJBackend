@@ -24,7 +24,7 @@ func AutoMigrateAll() {
 	DB.AutoMigrate(&QuestionTopic{})
 	DB.AutoMigrate(&Topic{})
 	DB.AutoMigrate(&Question{})
-	DB.AutoMigrate(&Answer{})
+	DB.AutoMigrate(&Option{})
 }
 
 // var Ctx = context.Background()
